@@ -9,6 +9,15 @@ import (
 )
 
 var builtins = map[string]*BuiltinObject{
+	"type": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1", len(args))
+			} else {
+				return &StringObject{Value: string(args[0].Type())}
+			}
+		},
+	},
 	"print": {
 		Fn: func(args ...MemoryObject) MemoryObject {
 			for _, arg := range args {

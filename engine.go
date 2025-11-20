@@ -44,7 +44,7 @@ func Eval(node Node, mem *Memory) MemoryObject {
 		return nil // 함수 정의는 값을 반환하지 않습니다.
 
 	case *FailExpression:
-		return newError(node.Message)
+		return &FailObject{Message: node.Message}
 
 	// 표현식 (Expressions)
 	case *Identifier:
@@ -486,7 +486,7 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 			}
 
 			if (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) && !typeMatch {
-				typeMatch = (actualType == ERROR_OBJ)
+				typeMatch = (actualType == FAIL_OBJ)
 			}
 
 			if !typeMatch {

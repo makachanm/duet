@@ -17,6 +17,7 @@ const (
 	NIL_OBJ          = "NIL"
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	ERROR_OBJ        = "ERROR"
+	FAIL_OBJ         = "FAIL"
 	FUNCTION_OBJ     = "FUNCTION"
 	LIST_OBJ         = "LIST"
 	BUILTIN_OBJ      = "BUILTIN"
@@ -77,6 +78,13 @@ type ErrorObject struct {
 
 func (e *ErrorObject) Type() MemoryObjectType { return ERROR_OBJ }
 func (e *ErrorObject) Inspect() string        { return "ERROR: " + e.Message }
+
+type FailObject struct {
+	Message string
+}
+
+func (e *FailObject) Type() MemoryObjectType { return FAIL_OBJ }
+func (e *FailObject) Inspect() string        { return e.Message }
 
 type FunctionObject struct {
 	Name       *Identifier
