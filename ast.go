@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -92,6 +93,19 @@ func (fs *FunctionStatement) String() string {
 	out.WriteString(fs.Body.String())
 
 	return out.String()
+}
+
+// FailExpression represents the 'fail' keyword, which produces an error.
+type FailExpression struct {
+	Token   Token // The 'fail' token
+	Message string
+}
+
+func (fe *FailExpression) expressionNode()      {}
+func (fe *FailExpression) TokenLiteral() string { return fe.Token.Literal }
+func (fe *FailExpression) String() string {
+	// The message for fail is often a string literal, which includes quotes.
+	return fmt.Sprintf("fail %s", fe.Message)
 }
 
 // ExpressionStatement wraps an expression so it can be used as a statement.

@@ -73,6 +73,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(FOR, p.parseForExpression)
 	p.registerPrefix(BANG, p.parsePrefixExpression)
 	p.registerPrefix(MINUS, p.parsePrefixExpression)
+	p.registerPrefix(FAIL, p.parseFailExpression)
 
 	p.infixParseFns = make(map[TokenType]infixParseFn)
 	p.registerInfix(PLUS, p.parseInfixExpression)
@@ -399,6 +400,23 @@ func (p *Parser) parsePrefixExpression() Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(PREFIX)
 	return expression
+}
+
+func (p *Parser) parseFailExpression() Expression {
+	exp := &FailExpression{Token: p.curToken}
+
+	// The 'fail' keyword must be followed by a string literal.
+	if !p.expectPeek(STRING) {
+		// If not a string, we can't create a valid FailExpression.
+		// The error is already recorded by expectPeek.
+		return nil
+	}
+
+	// The current token is now the string literal.
+	// We can get its value directly.
+	exp.Message = p.curToken.Literal
+
+	return exp
 }
 
 // --- Infix Parsing Functions ---

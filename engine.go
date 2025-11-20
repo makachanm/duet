@@ -43,6 +43,9 @@ func Eval(node Node, mem *Memory) MemoryObject {
 		mem.Set(string(node.Name.Value), fn)
 		return nil // 함수 정의는 값을 반환하지 않습니다.
 
+	case *FailExpression:
+		return newError(node.Message)
+
 	// 표현식 (Expressions)
 	case *Identifier:
 		return evalIdentifier(node, mem)
@@ -437,6 +440,10 @@ func evalExpressions(exps []Expression, mem *Memory) []MemoryObject {
 	var result []MemoryObject
 	for _, e := range exps {
 		evaluated := Eval(e, mem)
+		if _, ok := e.(*FailExpression); ok {
+			return []MemoryObject{evaluated}
+		}
+
 		if isError(evaluated) {
 			return []MemoryObject{evaluated}
 		}
@@ -450,10 +457,44 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 	case *FunctionObject:
 		extendedMem := extendFunctionMem(fn, args)
 		evaluated := Eval(fn.Body, extendedMem)
+
+		// Unwrap return value if it's wrapped in a ReturnValueObject
 		if returnValue, ok := evaluated.(*ReturnValueObject); ok {
-			return returnValue.Value
+			evaluated = returnValue.Value
+		}
+
+		// Check if the return type matches the function's signature
+		if fn.ReturnType != nil {
+			expectedType := fn.ReturnType.Value
+			actualType := evaluated.Type()
+
+			// A simple type mapping check
+			typeMatch := false
+			switch expectedType {
+			case "int":
+				typeMatch = (actualType == INTEGER_OBJ)
+			case "float":
+				typeMatch = (actualType == FLOAT_OBJ)
+			case "string":
+				typeMatch = (actualType == STRING_OBJ)
+			case "bool":
+				typeMatch = (actualType == BOOLEAN_OBJ)
+			case "list":
+				typeMatch = (actualType == LIST_OBJ)
+			case "map":
+				typeMatch = (actualType == MAP_OBJ)
+			}
+
+			if (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) && !typeMatch {
+				typeMatch = (actualType == ERROR_OBJ)
+			}
+
+			if !typeMatch {
+				return newError("type error: function %s returned %s, but expected %s", fn.Name.Value, actualType, expectedType)
+			}
 		}
 		return evaluated
+
 	case *BuiltinObject:
 		return fn.Fn(args...)
 	default:
