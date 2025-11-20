@@ -75,24 +75,81 @@ get_input |> process_data |> print_output
 
 ## 6. 표준 함수
 
+### 6.1. 입출력 (Input/Output)
+
 | 함수 | 설명 | 예시 |
 | --- | --- | --- |
 | `print(args...)` | 인자로 받은 값들을 표준 출력에 출력합니다. | `print("Hello", "Duet!")` |
-| `type(arg)` | 인자로 받은 값의 데이터 타입(자료형)을 문자열로 반환합니다. | `type(123)`는 `"INTEGER"`를 반환합니다. |
-| `len(arg)` | 문자열의 길이나 리스트의 요소 개수를 반환합니다. | `len([1, 2, 3])`는 `3`을 반환합니다. |
-| `first(l:list)` | 리스트의 첫 번째 요소를 반환합니다. 리스트가 비어있으면 `nil`을 반환합니다. | `first([10, 20, 30])`는 `10`을 반환합니다. |
-| `last(l:list)` | 리스트의 마지막 요소를 반환합니다. 리스트가 비어있으면 `nil`을 반환합니다. | `last([10, 20, 30])`는 `30`을 반환합니다. |
-| `rest(l:list):list` | 리스트의 첫 번째 요소를 제외한 나머지 요소들을 새로운 리스트로 반환합니다. | `rest([10, 20, 30])`는 `[20, 30]`을 반환합니다. |
-| `push(l:list, el)` | 리스트의 끝에 새로운 요소를 추가한 새 리스트를 반환합니다. | `push([10, 20], 30)`는 `[10, 20, 30]`을 반환합니다. |
 | `readln()` | 표준 입력에서 한 줄을 읽어 문자열로 반환합니다. | `supp get_user_input:str -> readln()` |
-| `int(arg)` | 인자를 정수로 변환합니다. 문자열, 정수, 불리언 타입을 지원합니다. | `int("123")`는 `123`을 반환합니다. |
+| `read(path:str):str` | 파일의 전체 내용을 문자열로 읽어 반환합니다. | `read("my_file.txt")` |
+| `write(path:str, content:str)` | 문자열을 파일에 씁니다. 성공 시 `true`를 반환합니다. | `write("log.txt", "This is a log.")` |
+| `lines(path:str):list` | 파일을 줄 단위로 읽어 `list`로 반환합니다. | `lines("data.csv")` |
+
+### 6.2. 타입 변환 (Type Conversion)
+
+| 함수 | 설명 | 예시 |
+| --- | --- | --- |
+| `int(arg)` | 인자를 정수로 변환합니다. | `int("123")`는 `123`을 반환합니다. |
 | `string(arg)` | 인자를 문자열로 변환합니다. | `string(123)`는 `"123"`을 반환합니다. |
-| `bool(arg)` | 인자를 불리언으로 변환합니다. 문자열, 정수, 불리언 타입을 지원합니다. | `bool("true")`는 `true`를 반환합니다. |
-| `read(path:str):str` | 파일의 전체 내용을 문자열로 읽어 반환합니다. 파일이 없거나 오류 발생 시 `fail`을 반환합니다. | `read("my_file.txt")` |
-| `write(path:str, content:str)` | 문자열을 파일에 씁니다. 성공 시 `true`를, 실패 시 `fail`을 반환합니다. | `write("log.txt", "This is a log.")` |
-| `lines(path:str):list` | 파일을 줄 단위로 읽어 `list`로 반환합니다. 실패 시 `fail`을 반환합니다. | `lines("data.csv")` |
-| `split(s:str, sep:str):list` | 문자열 `s`를 `sep`을 기준으로 나누어 `list`로 반환합니다. | `split("a,b,c", ",")`는 `["a", "b", "c"]`를 반환합니다. |
-| `join(l:list, sep:str):str` | `list`의 요소들을 `sep`을 이용해 합쳐 하나의 문자열로 반환합니다. | `join(["a", "b"], "-")`는 `"a-b"`를 반환합니다. |
-| `trim(s:str):str` | 문자열의 앞뒤 공백을 제거합니다. | `trim("  hello  ")`는 `"hello"`를 반환합니다. |
-| `replace(s:str, old:str, new:str):str` | 문자열 `s`에서 모든 `old`를 `new`로 교체합니다. | `replace("a-b-c", "-", "/")`는 `"a/b/c"`를 반환합니다. |
-| `contains(s:str, sub:str):bool` | 문자열 `s`가 `sub`을 포함하는지 확인합니다. | `contains("hello world", "world")`는 `true`를 반환합니다. |
+| `bool(arg)` | 인자를 불리언으로 변환합니다. | `bool("true")`는 `true`를 반환합니다. |
+| `type(arg)` | 인자의 데이터 타입을 문자열로 반환합니다. | `type(123)`는 `"INTEGER"`를 반환합니다. |
+
+### 6.3. 리스트 조작 (List Manipulation)
+
+| 함수 | 설명 | 예시 |
+| --- | --- | --- |
+| `len(l:list)` | 리스트의 요소 개수를 반환합니다. | `len([1, 2, 3])`는 `3`을 반환합니다. |
+| `first(l:list)` | 리스트의 첫 번째 요소를 반환합니다. | `first([10, 20])`는 `10`을 반환합니다. |
+| `last(l:list)` | 리스트의 마지막 요소를 반환합니다. | `last([10, 20])`는 `20`을 반환합니다. |
+| `rest(l:list):list` | 첫 요소를 제외한 새 리스트를 반환합니다. | `rest([10, 20])`는 `[20]`을 반환합니다. |
+| `push(l:list, el)` | 끝에 요소를 추가한 새 리스트를 반환합니다. | `push([10], 20)`는 `[10, 20]`을 반환합니다. |
+
+### 6.4. 문자열 조작 (String Manipulation)
+
+| 함수 | 설명 | 예시 |
+| --- | --- | --- |
+| `len(s:str)` | 문자열의 길이를 반환합니다. | `len("hello")`는 `5`를 반환합니다. |
+| `split(s:str, sep:str):list` | 문자열을 `sep` 기준으로 나누어 리스트로 반환합니다. | `split("a,b", ",")`는 `["a", "b"]`를 반환합니다. |
+| `join(l:list, sep:str):str` | 리스트 요소를 `sep`으로 합쳐 문자열로 반환합니다. | `join(["a", "b"], "-")`는 `"a-b"`를 반환합니다. |
+| `trim(s:str):str` | 문자열의 앞뒤 공백을 제거합니다. | `trim("  a  ")`는 `"a"`를 반환합니다. |
+| `upper(s:str):str` | 문자열을 대문자로 변환합니다. | `upper("aBc")`는 `"ABC"`를 반환합니다. |
+| `lower(s:str):str` | 문자열을 소문자로 변환합니다. | `lower("aBc")`는 `"abc"`를 반환합니다. |
+| `replace(s:str, old:str, new:str):str` | `old`를 `new`로 교체합니다. | `replace("a-b", "-", "/")`는 `"a/b"`를 반환합니다. |
+| `contains(s:str, sub:str):bool` | `sub` 문자열 포함 여부를 확인합니다. | `contains("hello", "ell")`는 `true`를 반환합니다. |
+
+### 6.5. 수학 (Math)
+
+| 함수 | 설명 | 예시 |
+| --- | --- | --- |
+| `abs(n)` | 숫자의 절댓값을 반환합니다. (결과는 `float`) | `abs(-5)`는 `5.0`을 반환합니다. |
+| `sqrt(n)` | 숫자의 제곱근을 반환합니다. (결과는 `float`) | `sqrt(16)`은 `4.0`을 반환합니다. |
+| `pow(base, exp)` | `base`의 `exp` 거듭제곱을 반환합니다. | `pow(2, 3)`은 `8.0`을 반환합니다. |
+| `sin(n)` | 숫자의 사인(sine) 값을 반환합니다. | `sin(0)`은 `0.0`을 반환합니다. |
+| `cos(n)` | 숫자의 코사인(cosine) 값을 반환합니다. | `cos(0)`은 `1.0`을 반환합니다. |
+| `tan(n)` | 숫자의 탄젠트(tangent) 값을 반환합니다. | `tan(0)`은 `0.0`을 반환합니다. |
+
+## 7. 데모 프로그램
+
+### 7.1. Hello World
+
+가장 간단한 형태의 Duet 프로그램입니다.
+
+```duet
+cons main -> print("Hello, World!")
+
+main
+```
+
+### 7.2. 파일 내용 대문자로 변환
+
+`input.txt` 파일을 읽어 대문자로 변경한 후, `output.txt` 파일에 저장합니다.
+
+```duet
+proc to_upper(s:str):str -> upper(s) 
+
+supp read_file:str -> read("input.txt")
+cons write_file(content:str) -> write("output.txt", content)
+
+read_file |> to_upper |> write_file
+```
+
