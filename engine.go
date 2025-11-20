@@ -455,6 +455,28 @@ func evalExpressions(exps []Expression, mem *Memory) []MemoryObject {
 func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) MemoryObject {
 	switch fn := fn.(type) {
 	case *FunctionObject:
+		// Check if the number of arguments matches the function's signature
+		if len(args) != len(fn.Parameters) {
+			return newError("wrong number of arguments: got=%d, want=%d", len(args), len(fn.Parameters))
+		}
+
+		// Check if the argument types match the function's signature
+		for i, param := range fn.Parameters {
+			expectedType := param.Type.Value
+			// If the function is errorable (eproc/esupp), it can accept a FAIL object
+			// as an argument, even if the type doesn't match.
+			if (fn.Token.Type == EPROC || fn.Token.Type == ESUPP) && args[i].Type() == FAIL_OBJ {
+				continue
+			}
+			actualType := args[i].Type()
+
+			// This is a simplified type check. A more robust implementation
+			// would use a map or a more flexible system.
+			if !isTypeMatch(actualType, expectedType) {
+				return newError("type error: wrong type for argument %s. got=%s, want=%s", param.Name.Value, actualType, expectedType)
+			}
+		}
+
 		extendedMem := extendFunctionMem(fn, args)
 		evaluated := Eval(fn.Body, extendedMem)
 
@@ -468,24 +490,10 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 			expectedType := fn.ReturnType.Value
 			actualType := evaluated.Type()
 
-			// A simple type mapping check
-			typeMatch := false
-			switch expectedType {
-			case "int":
-				typeMatch = (actualType == INTEGER_OBJ)
-			case "float":
-				typeMatch = (actualType == FLOAT_OBJ)
-			case "string":
-				typeMatch = (actualType == STRING_OBJ)
-			case "bool":
-				typeMatch = (actualType == BOOLEAN_OBJ)
-			case "list":
-				typeMatch = (actualType == LIST_OBJ)
-			case "map":
-				typeMatch = (actualType == MAP_OBJ)
-			}
-
-			if (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) && !typeMatch {
+			typeMatch := isTypeMatch(actualType, expectedType)
+			// For errorable functions (esupp/eproc), the return type can either be
+			// the declared type OR a FAIL object.
+			if !typeMatch && (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) {
 				typeMatch = (actualType == FAIL_OBJ)
 			}
 
@@ -499,6 +507,25 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 		return fn.Fn(args...)
 	default:
 		return newError("not a function: %s", fn.Type())
+	}
+}
+
+func isTypeMatch(actual MemoryObjectType, expected string) bool {
+	switch expected {
+	case "int":
+		return actual == INTEGER_OBJ
+	case "float":
+		return actual == FLOAT_OBJ
+	case "string":
+		return actual == STRING_OBJ
+	case "bool":
+		return actual == BOOLEAN_OBJ
+	case "list":
+		return actual == LIST_OBJ
+	case "map":
+		return actual == MAP_OBJ
+	default:
+		return false
 	}
 }
 

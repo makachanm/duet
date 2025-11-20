@@ -174,4 +174,158 @@ var builtins = map[string]*BuiltinObject{
 			}
 		},
 	},
+	"read": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1", len(args))
+			}
+			path, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("argument to `read` must be STRING, got %s", args[0].Type())
+			}
+			data, err := os.ReadFile(path.Value)
+			if err != nil {
+				return newError("could not read file: %s", err)
+			}
+			return &StringObject{Value: string(data)}
+		},
+	},
+	"write": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2", len(args))
+			}
+			path, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("first argument to `write` must be STRING, got %s", args[0].Type())
+			}
+			content, ok := args[1].(*StringObject)
+			if !ok {
+				return newError("second argument to `write` must be STRING, got %s", args[1].Type())
+			}
+			err := os.WriteFile(path.Value, []byte(content.Value), 0644)
+			if err != nil {
+				return newError("could not write file: %s", err)
+			}
+			return True
+		},
+	},
+	"lines": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1", len(args))
+			}
+			path, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("argument to `lines` must be STRING, got %s", args[0].Type())
+			}
+			file, err := os.Open(path.Value)
+			if err != nil {
+				return newError("could not open file: %s", err)
+			}
+			defer file.Close()
+			var lines []MemoryObject
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				lines = append(lines, &StringObject{Value: scanner.Text()})
+			}
+			return &ListObject{Elements: lines}
+		},
+	},
+	"split": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2", len(args))
+			}
+			s, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("first argument to `split` must be STRING, got %s", args[0].Type())
+			}
+			sep, ok := args[1].(*StringObject)
+			if !ok {
+				return newError("second argument to `split` must be STRING, got %s", args[1].Type())
+			}
+			parts := strings.Split(s.Value, sep.Value)
+			elements := make([]MemoryObject, len(parts))
+			for i, p := range parts {
+				elements[i] = &StringObject{Value: p}
+			}
+			return &ListObject{Elements: elements}
+		},
+	},
+	"join": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2", len(args))
+			}
+			list, ok := args[0].(*ListObject)
+			if !ok {
+				return newError("first argument to `join` must be LIST, got %s", args[0].Type())
+			}
+			sep, ok := args[1].(*StringObject)
+			if !ok {
+				return newError("second argument to `join` must be STRING, got %s", args[1].Type())
+			}
+			var parts []string
+			for _, el := range list.Elements {
+				s, ok := el.(*StringObject)
+				if !ok {
+					return newError("all elements in list for `join` must be STRING, got %s", el.Type())
+				}
+				parts = append(parts, s.Value)
+			}
+			return &StringObject{Value: strings.Join(parts, sep.Value)}
+		},
+	},
+	"trim": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 1 {
+				return newError("wrong number of arguments. got=%d, want=1", len(args))
+			}
+			s, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("argument to `trim` must be STRING, got %s", args[0].Type())
+			}
+			return &StringObject{Value: strings.TrimSpace(s.Value)}
+		},
+	},
+	"replace": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 3 {
+				return newError("wrong number of arguments. got=%d, want=3", len(args))
+			}
+			s, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("first argument to `replace` must be STRING, got %s", args[0].Type())
+			}
+			old, ok := args[1].(*StringObject)
+			if !ok {
+				return newError("second argument to `replace` must be STRING, got %s", args[1].Type())
+			}
+			newStr, ok := args[2].(*StringObject)
+			if !ok {
+				return newError("third argument to `replace` must be STRING, got %s", args[2].Type())
+			}
+			return &StringObject{Value: strings.ReplaceAll(s.Value, old.Value, newStr.Value)}
+		},
+	},
+	"contains": {
+		Fn: func(args ...MemoryObject) MemoryObject {
+			if len(args) != 2 {
+				return newError("wrong number of arguments. got=%d, want=2", len(args))
+			}
+			s, ok := args[0].(*StringObject)
+			if !ok {
+				return newError("first argument to `contains` must be STRING, got %s", args[0].Type())
+			}
+			sub, ok := args[1].(*StringObject)
+			if !ok {
+				return newError("second argument to `contains` must be STRING, got %s", args[1].Type())
+			}
+			if strings.Contains(s.Value, sub.Value) {
+				return True
+			}
+			return False
+		},
+	},
 }
