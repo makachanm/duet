@@ -332,12 +332,14 @@ func evalFloatInfixExpression(operator string, left, right MemoryObject) MemoryO
 }
 
 func evalStringInfixExpression(operator string, left, right MemoryObject) MemoryObject {
-	if operator != "+" {
+	switch operator {
+	case "+":
+		return &StringObject{Value: left.(*StringObject).Value + right.(*StringObject).Value}
+	case "==":
+		return nativeBoolToBooleanObject(left.(*StringObject).Value == right.(*StringObject).Value)
+	default:
 		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
-	leftVal := left.(*StringObject).Value
-	rightVal := right.(*StringObject).Value
-	return &StringObject{Value: leftVal + rightVal}
 }
 
 func evalIfExpression(ie *IfExpression, mem *Memory) MemoryObject {
@@ -485,19 +487,19 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 			evaluated = returnValue.Value
 		}
 
+		// For errorable functions, if they return a FAIL object, just pass it through.
+		if (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) && evaluated.Type() == FAIL_OBJ {
+			return evaluated
+		}
+
 		// Check if the return type matches the function's signature
 		if fn.ReturnType != nil {
 			expectedType := fn.ReturnType.Value
 			actualType := evaluated.Type()
-
 			typeMatch := isTypeMatch(actualType, expectedType)
-			// For errorable functions (esupp/eproc), the return type can either be
-			// the declared type OR a FAIL object.
-			if !typeMatch && (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) {
-				typeMatch = (actualType == FAIL_OBJ)
-			}
 
 			if !typeMatch {
+				fmt.Println(evaluated)
 				return newError("type error: function %s returned %s, but expected %s", fn.Name.Value, actualType, expectedType)
 			}
 		}
@@ -516,7 +518,7 @@ func isTypeMatch(actual MemoryObjectType, expected string) bool {
 		return actual == INTEGER_OBJ
 	case "float":
 		return actual == FLOAT_OBJ
-	case "string":
+	case "str":
 		return actual == STRING_OBJ
 	case "bool":
 		return actual == BOOLEAN_OBJ
