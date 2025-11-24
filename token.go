@@ -30,6 +30,8 @@ const (
 	MODULO   = "%"
 	LT       = "<"
 	GT       = ">"
+	LE       = "<="
+	GE       = ">="
 	EQ       = "=="
 	NOT_EQ   = "!="
 	ARROW    = "->"
@@ -46,33 +48,39 @@ const (
 	RBRACKET = "]"
 
 	// Keywords
-	PROC  = "PROC"
-	CONS  = "CONS"
-	SUPP  = "SUPP"
-	IF    = "IF"
-	THEN  = "THEN"
-	ELSE  = "ELSE"
-	FOR   = "FOR"
-	IN    = "IN"
-	FAIL  = "FAIL"
-	TRUE  = "TRUE"
-	FALSE = "FALSE"
-	NIL   = "NIL"
+	PROC    = "PROC"
+	CONS    = "CONS"
+	SUPP    = "SUPP"
+	IF      = "IF"
+	THEN    = "THEN"
+	ELSE    = "ELSE"
+	FOR     = "FOR"
+	IN      = "IN"
+	FAIL    = "FAIL"
+	MATCH   = "MATCH"
+	IS      = "IS"
+	DEFAULT = "DEFAULT"
+	TRUE    = "TRUE"
+	FALSE   = "FALSE"
+	NIL     = "NIL"
 )
 
 var keywords = map[string]TokenType{
-	"proc":  PROC,
-	"cons":  CONS,
-	"supp":  SUPP,
-	"if":    IF,
-	"then":  THEN,
-	"else":  ELSE,
-	"for":   FOR,
-	"in":    IN,
-	"fail":  FAIL,
-	"true":  TRUE,
-	"false": FALSE,
-	"nil":   NIL,
+	"proc":    PROC,
+	"cons":    CONS,
+	"supp":    SUPP,
+	"if":      IF,
+	"then":    THEN,
+	"else":    ELSE,
+	"for":     FOR,
+	"in":      IN,
+	"match":   MATCH,
+	"is":      IS,
+	"default": DEFAULT,
+	"fail":    FAIL,
+	"true":    TRUE,
+	"false":   FALSE,
+	"nil":     NIL,
 }
 
 // LookupIdent checks the keywords table to see whether the given identifier is a keyword.

@@ -347,7 +347,7 @@ func (ie *IndexExpression) String() string {
 
 // MatchCase represents a single case in a match expression.
 type MatchCase struct {
-	Pattern     Expression
+	Condition   Expression
 	Consequence Expression
 }
 
@@ -369,17 +369,17 @@ func (me *MatchExpression) String() string {
 
 	cases := []string{}
 	for _, c := range me.Cases {
-		cases = append(cases, c.Pattern.String()+" -> "+c.Consequence.String())
+		cases = append(cases, "is "+c.Condition.String()+" then "+c.Consequence.String())
 	}
 	out.WriteString(strings.Join(cases, ", "))
 
 	if me.Default != nil {
 		if len(cases) > 0 {
-			out.WriteString(", ")
+			out.WriteString("\n")
 		}
-		out.WriteString("_ -> " + me.Default.String())
+		out.WriteString("default " + me.Default.String())
 	}
 
-	out.WriteString("}")
+	out.WriteString("\n}")
 	return out.String()
 }

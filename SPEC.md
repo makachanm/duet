@@ -53,6 +53,17 @@ proc handle_error(input:str?):str -> if is_fail(input) then "오류가 발생했
 proc get_grade(score:int):string -> if score >= 90 then "A" else "B"
 ```
 
+`match`는 여러 케이스를 비교하는 표현식입니다.
+```duet
+proc get_grade(score:int):string -> match score { 
+is score > 90 then "A"
+is score > 80 then "B"
+is score > 70 then "C"
+is score > 60 then "D"
+default "F"
+}
+```
+
 ### 반복문
 
 `for-in`은 컬렉션을 순회하며 새로운 `list`를 반환합니다.

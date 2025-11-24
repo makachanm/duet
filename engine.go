@@ -93,6 +93,8 @@ func Eval(node Node, mem *Memory) MemoryObject {
 			return args[0]
 		}
 		return applyFunction(function, args, false)
+	case *MatchExpression:
+		return evalMatchExpression(node, mem)
 	case *ListLiteral:
 		elements := evalExpressions(node.Elements, mem)
 		if len(elements) == 1 && isError(elements[0]) {
@@ -297,6 +299,10 @@ func evalIntegerInfixExpression(operator string, left, right MemoryObject) Memor
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
 		return nativeBoolToBooleanObject(leftVal > rightVal)
+	case "<=":
+		return nativeBoolToBooleanObject(leftVal <= rightVal)
+	case ">=":
+		return nativeBoolToBooleanObject(leftVal >= rightVal)
 	case "==":
 		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
@@ -325,6 +331,10 @@ func evalFloatInfixExpression(operator string, left, right MemoryObject) MemoryO
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
 		return nativeBoolToBooleanObject(leftVal > rightVal)
+	case "<=":
+		return nativeBoolToBooleanObject(leftVal <= rightVal)
+	case ">=":
+		return nativeBoolToBooleanObject(leftVal >= rightVal)
 	case "==":
 		return nativeBoolToBooleanObject(leftVal == rightVal)
 	case "!=":
@@ -363,6 +373,30 @@ func evalIfExpression(ie *IfExpression, mem *Memory) MemoryObject {
 	} else {
 		return Nil
 	}
+}
+
+func evalMatchExpression(me *MatchExpression, mem *Memory) MemoryObject {
+	subject := Eval(me.Subject, mem)
+	if isError(subject) {
+		return subject
+	}
+
+	for _, c := range me.Cases {
+		condition := Eval(c.Condition, mem)
+		if isError(condition) {
+			return condition
+		}
+
+		if isTruthy(condition) {
+			return Eval(c.Consequence, mem)
+		}
+	}
+
+	if me.Default != nil {
+		return Eval(me.Default, mem)
+	}
+
+	return Nil // 일치하는 케이스가 없고 기본값도 없는 경우
 }
 
 func evalForExpression(fe *ForExpression, mem *Memory) MemoryObject {

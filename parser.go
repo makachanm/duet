@@ -24,6 +24,8 @@ var precedences = map[TokenType]int{
 	NOT_EQ:   EQUALS,
 	LT:       LESSGREATER,
 	GT:       LESSGREATER,
+	LE:       LESSGREATER,
+	GE:       LESSGREATER,
 	PLUS:     SUM,
 	MINUS:    SUM,
 	SLASH:    PRODUCT,
@@ -72,6 +74,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(IF, p.parseIfExpression)
 	p.registerPrefix(FOR, p.parseForExpression)
 	p.registerPrefix(BANG, p.parsePrefixExpression)
+	p.registerPrefix(MATCH, p.parseMatchExpression)
 	p.registerPrefix(MINUS, p.parsePrefixExpression)
 	p.registerPrefix(FAIL, p.parseFailExpression)
 
@@ -85,6 +88,8 @@ func NewParser(l *Lexer) *Parser {
 	p.registerInfix(NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(LT, p.parseInfixExpression)
 	p.registerInfix(GT, p.parseInfixExpression)
+	p.registerInfix(LE, p.parseInfixExpression)
+	p.registerInfix(GE, p.parseInfixExpression)
 	p.registerInfix(PIPELINE, p.parseInfixExpression)
 	p.registerInfix(LPAREN, p.parseCallExpression)
 	p.registerInfix(LBRACKET, p.parseIndexExpression)
@@ -388,6 +393,51 @@ func (p *Parser) parseForExpression() Expression {
 
 	p.nextToken()
 	expression.Body = p.parseExpression(LOWEST)
+
+	return expression
+}
+
+func (p *Parser) parseMatchExpression() Expression {
+	expression := &MatchExpression{Token: p.curToken}
+
+	p.nextToken()
+	expression.Subject = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(LBRACE) {
+		return nil // Missing '{'
+	}
+
+	for !p.peekTokenIs(RBRACE) && !p.peekTokenIs(EOF) {
+		p.nextToken()
+
+		switch p.curToken.Type {
+		case IS:
+			p.nextToken() // consume 'is'
+			condition := p.parseExpression(LOWEST)
+
+			if !p.expectPeek(THEN) {
+				return nil // Missing 'then'
+			}
+
+			p.nextToken() // consume 'then'
+			consequence := p.parseExpression(LOWEST)
+			expression.Cases = append(expression.Cases, &MatchCase{Condition: condition, Consequence: consequence})
+
+		case DEFAULT:
+			p.nextToken()
+			expression.Default = p.parseExpression(LOWEST)
+
+		default:
+			// Invalid token inside match block
+			msg := fmt.Sprintf("unexpected token in match block: got %s, expected 'is' or 'default'", p.curToken.Type)
+			p.errors = append(p.errors, msg)
+			return nil
+		}
+	}
+
+	if !p.expectPeek(RBRACE) {
+		return nil // Missing '}'
+	}
 
 	return expression
 }
