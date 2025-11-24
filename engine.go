@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 // ExcutionEngine은 AST와 실행 환경(메모리)을 가집니다.
@@ -433,7 +434,7 @@ func evalIdentifier(node *Identifier, mem *Memory) MemoryObject {
 		// If the identifier refers to a zero-argument supplier (supp/esupp),
 		// invoke it and return the produced value instead of the function object.
 		if fn, ok := val.(*FunctionObject); ok {
-			if (fn.Token.Type == SUPP || fn.Token.Type == ESUPP) && len(fn.Parameters) == 0 {
+			if fn.Token.Type == SUPP && len(fn.Parameters) == 0 {
 				produced := applyFunction(fn, []MemoryObject{}, false)
 				return produced
 			}
@@ -473,17 +474,18 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 		// Check if the argument types match the function's signature
 		for i, param := range fn.Parameters {
 			expectedType := param.Type.Value
-			// If the function is errorable (eproc/esupp), it can accept a FAIL object
-			// as an argument, even if the type doesn't match.
-			if (fn.Token.Type == EPROC || fn.Token.Type == ESUPP) && args[i].Type() == FAIL_OBJ {
-				continue
-			}
 			actualType := args[i].Type()
+			isFallibleParam := strings.HasSuffix(expectedType, "?")
+			cleanExpectedType := strings.TrimSuffix(expectedType, "?")
+
+			if isFallibleParam && actualType == FAIL_OBJ {
+				continue // A fallible parameter accepts a FAIL object.
+			}
 
 			// This is a simplified type check. A more robust implementation
 			// would use a map or a more flexible system.
-			if !isTypeMatch(actualType, expectedType) {
-				return newError("type error: wrong type for argument %s. got=%s, want=%s", param.Name.Value, actualType, expectedType)
+			if !isTypeMatch(actualType, cleanExpectedType) {
+				return newError("type error: wrong type for argument %s. got=%s, want=%s", param.Name.Value, actualType, cleanExpectedType)
 			}
 		}
 
@@ -495,25 +497,36 @@ func applyFunction(fn MemoryObject, args []MemoryObject, isPipeline bool) Memory
 			evaluated = returnValue.Value
 		}
 
-		// For errorable functions, if they return a FAIL object, just pass it through.
-		if (fn.Token.Type == ESUPP || fn.Token.Type == EPROC) && evaluated.Type() == FAIL_OBJ {
-			return evaluated
-		}
-
 		// Check if the return type matches the function's signature
 		if fn.ReturnType != nil {
 			expectedType := fn.ReturnType.Value
 			actualType := evaluated.Type()
-			typeMatch := isTypeMatch(actualType, expectedType)
 
-			if !typeMatch {
-				fmt.Println(evaluated)
+			// For errorable functions, allow returning FAIL if the return type is marked as fallible (e.g., "str?").
+			isFallibleDecl := strings.HasSuffix(expectedType, "?")
+			if actualType == FAIL_OBJ {
+				if isFallibleDecl {
+					return evaluated // It's a FAIL object and the return type is fallible, so pass it through.
+				}
+				return newError("type error: function %s returned FAIL, but return type '%s' is not marked as fallible (use '%s?')", fn.Name.Value, expectedType, expectedType)
+			}
+
+			// Strip '?' for normal type matching.
+			cleanExpectedType := strings.TrimSuffix(expectedType, "?")
+			if !isTypeMatch(actualType, cleanExpectedType) {
 				return newError("type error: function %s returned %s, but expected %s", fn.Name.Value, actualType, expectedType)
 			}
 		}
 		return evaluated
 
 	case *BuiltinObject:
+		// If any argument is a FAIL object, just return it immediately.
+		// This allows built-ins to participate in error-handling pipelines.
+		for _, arg := range args {
+			if arg.Type() == FAIL_OBJ {
+				return arg
+			}
+		}
 		return fn.Fn(args...)
 	default:
 		return newError("not a function: %s", fn.Type())

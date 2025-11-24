@@ -5,7 +5,7 @@ func newListBuiltins() map[string]*BuiltinObject {
 		"len": {
 			Fn: func(args ...MemoryObject) MemoryObject {
 				if len(args) != 1 {
-					return newError("wrong number of arguments. got=%d, want=1", len(args))
+					return newFail("wrong number of arguments. got=%d, want=1", len(args))
 				}
 				switch arg := args[0].(type) {
 				case *StringObject:
@@ -13,7 +13,7 @@ func newListBuiltins() map[string]*BuiltinObject {
 				case *ListObject:
 					return &IntegerObject{Value: int64(len(arg.Elements))}
 				default:
-					return newError("argument to `len` not supported, got %s", args[0].Type())
+					return newFail("argument to `len` not supported, got %s", args[0].Type())
 				}
 			},
 		},

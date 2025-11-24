@@ -86,6 +86,10 @@ type FailObject struct {
 func (e *FailObject) Type() MemoryObjectType { return FAIL_OBJ }
 func (e *FailObject) Inspect() string        { return e.Message }
 
+func newFail(format string, a ...interface{}) *FailObject {
+	return &FailObject{Message: fmt.Sprintf(format, a...)}
+}
+
 type FunctionObject struct {
 	Name       *Identifier
 	Token      Token // The function type token (e.g., PROC, CONS, SUPP)

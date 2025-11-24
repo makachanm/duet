@@ -49,8 +49,6 @@ const (
 	PROC  = "PROC"
 	CONS  = "CONS"
 	SUPP  = "SUPP"
-	EPROC = "EPROC"
-	ESUPP = "ESUPP"
 	IF    = "IF"
 	THEN  = "THEN"
 	ELSE  = "ELSE"
@@ -66,8 +64,6 @@ var keywords = map[string]TokenType{
 	"proc":  PROC,
 	"cons":  CONS,
 	"supp":  SUPP,
-	"eproc": EPROC,
-	"esupp": ESUPP,
 	"if":    IF,
 	"then":  THEN,
 	"else":  ELSE,

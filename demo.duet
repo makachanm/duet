@@ -1,0 +1,7 @@
+proc to_upper(s:str?):str? -> if is_fail(s) then s else upper(s)
+proc handle_read_error(input:str?):str -> if is_fail(input) then "Error occured while reading file" else input
+
+supp read_file:str? -> read("demo_input.txt")
+cons write_file(content:str) -> write("demo_output.txt", content)
+
+read_file |> to_upper |> handle_read_error |> write_file

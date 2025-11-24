@@ -119,7 +119,7 @@ func (p *Parser) ParseProgram() *Program {
 
 func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
-	case PROC, CONS, SUPP, EPROC, ESUPP:
+	case PROC, CONS, SUPP:
 		return p.parseFunctionStatement()
 	default:
 		return p.parseExpressionStatement()
@@ -138,7 +138,7 @@ func (p *Parser) parseFunctionStatement() *FunctionStatement {
 	// cons print_message(msg:str) -> print(msg)
 	// supp get_random_num:float -> random()
 	switch stmt.Token.Type {
-	case PROC, EPROC:
+	case PROC:
 		if !p.expectPeek(LPAREN) {
 			return nil
 		}
@@ -155,7 +155,7 @@ func (p *Parser) parseFunctionStatement() *FunctionStatement {
 			return nil
 		}
 		stmt.Parameters = p.parseFunctionParameters()
-	case SUPP, ESUPP:
+	case SUPP:
 		if !p.expectPeek(COLON) {
 			return nil
 		}

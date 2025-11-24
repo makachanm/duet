@@ -344,3 +344,42 @@ func (ie *IndexExpression) String() string {
 
 	return out.String()
 }
+
+// MatchCase represents a single case in a match expression.
+type MatchCase struct {
+	Pattern     Expression
+	Consequence Expression
+}
+
+// MatchExpression represents a match expression.
+type MatchExpression struct {
+	Token   Token // The 'match' token
+	Subject Expression
+	Cases   []*MatchCase
+	Default Expression // The default case (wildcard '_')
+}
+
+func (me *MatchExpression) expressionNode()      {}
+func (me *MatchExpression) TokenLiteral() string { return me.Token.Literal }
+func (me *MatchExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("match ")
+	out.WriteString(me.Subject.String())
+	out.WriteString(" {")
+
+	cases := []string{}
+	for _, c := range me.Cases {
+		cases = append(cases, c.Pattern.String()+" -> "+c.Consequence.String())
+	}
+	out.WriteString(strings.Join(cases, ", "))
+
+	if me.Default != nil {
+		if len(cases) > 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString("_ -> " + me.Default.String())
+	}
+
+	out.WriteString("}")
+	return out.String()
+}

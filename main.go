@@ -9,7 +9,35 @@ import (
 
 const PROMPT = ">> "
 
-func Start(in io.Reader, out io.Writer) {
+func FileExecute(filename string) {
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	l := New(string(file))
+	p := NewParser(l)
+
+	program := p.ParseProgram()
+	memory := NewMemory()
+
+	if len(p.Errors()) != 0 {
+		printParserErrors(os.Stdout, p.Errors())
+		return
+	}
+
+	engine := NewExcutionEngine(program, memory)
+	evaluated := engine.Run()
+
+	if evaluated != nil {
+		fmt.Println(evaluated.Inspect())
+	}
+}
+
+func Repl(in io.Reader, out io.Writer) {
+	fmt.Println("Duet REPL. Ctrl-C to exit.")
+
 	scanner := bufio.NewScanner(in)
 	memory := NewMemory()
 
@@ -47,6 +75,10 @@ func printParserErrors(out io.Writer, errors []string) {
 }
 
 func main() {
-	fmt.Println("Duet REPL. Ctrl-C to exit.")
-	Start(os.Stdin, os.Stdout)
+	if len(os.Args) > 1 {
+		FileExecute(os.Args[1])
+		return
+	}
+
+	Repl(os.Stdin, os.Stdout)
 }
