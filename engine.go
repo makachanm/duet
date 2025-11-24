@@ -228,6 +228,8 @@ func evalInfixExpression(operator string, left, right MemoryObject) MemoryObject
 		return evalFloatInfixExpression(operator, left, right)
 	case left.Type() == STRING_OBJ && right.Type() == STRING_OBJ:
 		return evalStringInfixExpression(operator, left, right)
+	case left.Type() == STRING_OBJ && right.Type() == INTEGER_OBJ:
+		return evalStringInfixExpression(operator, left, right)
 	case operator == "==":
 		if left.Type() == BOOLEAN_OBJ && right.Type() == BOOLEAN_OBJ {
 			return nativeBoolToBooleanObject(left.(*BooleanObject).Value == right.(*BooleanObject).Value)
@@ -337,6 +339,12 @@ func evalStringInfixExpression(operator string, left, right MemoryObject) Memory
 		return &StringObject{Value: left.(*StringObject).Value + right.(*StringObject).Value}
 	case "==":
 		return nativeBoolToBooleanObject(left.(*StringObject).Value == right.(*StringObject).Value)
+	case "*":
+		multiplied := ""
+		for i := 0; i < int(right.(*IntegerObject).Value); i++ {
+			multiplied += left.(*StringObject).Value
+		}
+		return &StringObject{Value: multiplied}
 	default:
 		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
