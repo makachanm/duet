@@ -2,12 +2,14 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"os"
 )
 
-const PROMPT = ">> "
+const VERSION = "0.1"
+const PROMPT = "? "
 
 func FileExecute(filename string) {
 	file, err := os.ReadFile(filename)
@@ -36,7 +38,7 @@ func FileExecute(filename string) {
 }
 
 func Repl(in io.Reader, out io.Writer) {
-	fmt.Println("Duet REPL. Ctrl-C to exit.")
+	fmt.Printf("Duet version %s. Ctrl-C to exit.\n", VERSION)
 
 	scanner := bufio.NewScanner(in)
 	memory := NewMemory()
@@ -75,10 +77,19 @@ func printParserErrors(out io.Writer, errors []string) {
 }
 
 func main() {
-	if len(os.Args) > 1 {
-		FileExecute(os.Args[1])
+	var version bool
+	flag.BoolVar(&version, "version", false, "print Duet version")
+	flag.BoolVar(&version, "v", false, "print Duet version (shorthand)")
+	flag.Parse()
+
+	if version {
+		fmt.Printf("Duet version %s\n", VERSION)
 		return
 	}
 
-	Repl(os.Stdin, os.Stdout)
+	if flag.NArg() > 0 {
+		FileExecute(flag.Arg(0))
+	} else {
+		Repl(os.Stdin, os.Stdout)
+	}
 }
