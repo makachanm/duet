@@ -22,14 +22,13 @@ func FileExecute(filename string) {
 	p := NewParser(l)
 
 	program := p.ParseProgram()
-	memory := NewMemory()
 
 	if len(p.Errors()) != 0 {
 		printParserErrors(os.Stdout, p.Errors())
 		return
 	}
 
-	engine := NewExcutionEngine(program, memory)
+	engine := NewExcutionEngine(program, nil)
 	evaluated := engine.Run()
 
 	if evaluated != nil {
